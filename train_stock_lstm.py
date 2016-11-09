@@ -10,9 +10,9 @@ import sys
 from collections import deque
 
 import tensorflow as tf
-from tensorflow.models.rnn import rnn
-from tensorflow.models.rnn import rnn_cell
-from tensorflow.models.rnn import seq2seq
+from tensorflow.python.ops import rnn
+from tensorflow.python.ops import rnn_cell
+from tensorflow.python.ops import seq2seq
 
 import config as c
 
@@ -142,7 +142,7 @@ class StockLSTM(object):
         if is_training and config.keep_prob < 1:
             inputs = [tf.nn.dropout(input_, config.keep_prob) for input_ in inputs]
 
-        outputs, states = rnn.rnn(cell, inputs, initial_state=self._initial_state)
+        outputs, last_state = rnn.rnn(cell, inputs, initial_state=self._initial_state)
         rnn_output = tf.reshape(tf.concat(1, outputs), [-1, size])
 
         self._output = output = tf.nn.xw_plus_b(rnn_output,
@@ -150,7 +150,7 @@ class StockLSTM(object):
                                  tf.get_variable("out_b", [1]))
 
         self._cost = cost = tf.reduce_mean(tf.square(output - tf.reshape(self._targets, [-1])))
-        self._final_state = states[-1]
+        self._final_state = last_state
 
         if not is_training:
             return
